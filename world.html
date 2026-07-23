@@ -9,45 +9,45 @@
   <meta http-equiv="Pragma" content="no-cache" />
   <meta http-equiv="Expires" content="0" />
   <link rel="icon" href="data:," />
-  <title>Real World-Tracking AR — 8th Wall</title>
+  <title>AR Analyze — 8th Wall + Gemini</title>
 
-  <!-- A-Frame 1.2.0 ships THREE r125 (exactly what the 8th Wall engine expects).
-       Load it FIRST so the engine auto-registers its A-Frame components. -->
+  <!-- A-Frame 1.2.0 (THREE r125, matches the 8th Wall engine) -->
   <script src="https://aframe.io/releases/1.2.0/aframe.min.js"></script>
-  <!-- 8th Wall helper UI (loading / errors) -->
   <script src="https://cdn.jsdelivr.net/npm/@8thwall/xrextras@1/dist/xrextras.js"></script>
-  <!-- 8th Wall engine binary — the real free SLAM world-tracking engine (no key).
-       data-preload-chunks="slam" is REQUIRED for world tracking: the OSS engine
-       loads SLAM as a lazy chunk, and without preloading it xrweb crashes on init.
-       crossorigin="anonymous" also unmasks cross-origin error messages. -->
+  <!-- 8th Wall engine; data-preload-chunks="slam" is required for world tracking -->
   <script src="https://cdn.jsdelivr.net/npm/@8thwall/engine-binary@1/dist/xr.js" crossorigin="anonymous" data-preload-chunks="slam"></script>
-  <!-- our A-Frame components (register before <a-scene> is parsed). ?v bumped to bust cache. -->
-  <script src="./src/world.js?v=3"></script>
+  <!-- our components (register before <a-scene>). ?v bumped to bust cache. -->
+  <script src="./src/world.js?v=4"></script>
 
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
-    html, body { width: 100%; height: 100%; margin: 0; overflow: hidden; background: #000;
+    html, body { width: 100%; height: 100%; overflow: hidden; background: #000;
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
-    #tip {
-      position: fixed; left: 12px; right: 12px; bottom: max(18px, env(safe-area-inset-bottom));
-      z-index: 20; text-align: center; color: #eaf0ff; font-size: 15px; line-height: 1.4;
-      background: rgba(12,18,30,0.82); border: 1px solid #26324b; border-radius: 12px;
-      padding: 12px 14px; backdrop-filter: blur(8px);
-    }
     #back { position: fixed; top: max(12px, env(safe-area-inset-top)); left: 12px; z-index: 999999;
       color: #dfe8ff; text-decoration: none; font-size: 14px; font-weight: 600;
       background: rgba(0,0,0,0.5); padding: 8px 12px; border-radius: 8px; }
-    /* On-device debug console — sits ABOVE the loading spinner so failures are visible */
-    #debug {
-      position: fixed; top: max(44px, calc(env(safe-area-inset-top) + 34px)); left: 8px; right: 8px;
-      height: 42vh; z-index: 999998; margin: 0; overflow-y: auto;
-      background: rgba(0,0,0,0.72); color: #7CFC9A; border: 1px solid #234;
-      border-radius: 10px; padding: 8px 10px; font-size: 10px; line-height: 1.35;
-      font-family: ui-monospace, SFMono-Regular, Menlo, monospace; white-space: pre-wrap; word-break: break-word;
-    }
-    #dbgHide { position: fixed; top: max(12px, env(safe-area-inset-top)); right: 12px; z-index: 999999;
+    #dbgToggle { position: fixed; top: max(12px, env(safe-area-inset-top)); right: 12px; z-index: 999999;
       color: #dfe8ff; font-size: 13px; font-weight: 600; background: rgba(0,0,0,0.5);
       padding: 8px 12px; border-radius: 8px; border: 0; }
+    #debug { position: fixed; top: max(44px, calc(env(safe-area-inset-top) + 34px)); left: 8px; right: 8px;
+      height: 34vh; z-index: 999998; margin: 0; overflow-y: auto; display: none;
+      background: rgba(0,0,0,0.72); color: #7CFC9A; border: 1px solid #234;
+      border-radius: 10px; padding: 8px 10px; font-size: 10px; line-height: 1.35;
+      font-family: ui-monospace, SFMono-Regular, Menlo, monospace; white-space: pre-wrap; word-break: break-word; }
+    /* Analyze button + status (bottom center) */
+    #analyzeWrap { position: fixed; left: 0; right: 0; bottom: max(22px, env(safe-area-inset-bottom));
+      z-index: 20; display: flex; flex-direction: column; align-items: center; gap: 10px; pointer-events: none; }
+    #analyzeStatus { pointer-events: none; color: #eaf0ff; font-size: 14px; font-weight: 600;
+      background: rgba(12,18,30,0.8); padding: 8px 14px; border-radius: 999px; backdrop-filter: blur(6px);
+      max-width: 90vw; text-align: center; min-height: 0; }
+    #analyzeStatus:empty { display: none; }
+    #analyzeBtn { pointer-events: auto; appearance: none; border: 0; border-radius: 999px;
+      padding: 16px 42px; font-size: 18px; font-weight: 700; color: #05231a;
+      background: linear-gradient(135deg, #7cf29a, #4bd0ff); box-shadow: 0 6px 24px rgba(0,0,0,0.4); }
+    #analyzeBtn:active { transform: scale(0.97); }
+    #tip { position: fixed; left: 12px; right: 12px; top: max(56px, calc(env(safe-area-inset-top) + 46px));
+      z-index: 15; text-align: center; color: #cfe0ff; font-size: 13px; line-height: 1.4;
+      background: rgba(12,18,30,0.6); border-radius: 10px; padding: 8px 12px; backdrop-filter: blur(6px); }
   </style>
 </head>
 <body>
@@ -56,28 +56,26 @@
     xrextras-loading
     xrextras-runtime-error
     cloud-log
-    tap-place-ground
+    analyze
     renderer="colorManagement: true"
     device-orientation-permission-ui="enabled: false">
-    <a-camera
-      position="0 1.6 0"
-      raycaster="objects: .cantap"
-      cursor="fuse: false; rayOrigin: mouse"></a-camera>
-
+    <a-camera position="0 1.6 0"></a-camera>
     <a-light type="ambient" intensity="0.9"></a-light>
-    <a-light type="directional" intensity="0.8" position="3 10 5"></a-light>
-
-    <!-- invisible ground plane at y=0 to catch taps (the engine puts the real floor here) -->
+    <a-light type="directional" intensity="0.7" position="3 10 5"></a-light>
+    <!-- invisible ground plane at y=0 (the engine puts the real floor here) -->
     <a-entity id="ground" class="cantap"
       geometry="primitive: plane; width: 200; height: 200"
-      rotation="-90 0 0"
-      material="opacity: 0; transparent: true"
-      position="0 0 0"></a-entity>
+      rotation="-90 0 0" material="opacity: 0; transparent: true" position="0 0 0"></a-entity>
   </a-scene>
 
   <a id="back" href="./">‹ Back</a>
-  <button id="dbgHide" onclick="var d=document.getElementById('debug');d.style.display=d.style.display==='none'?'block':'none';">Hide log</button>
+  <button id="dbgToggle" onclick="var d=document.getElementById('debug');d.style.display=d.style.display==='block'?'none':'block';">Log</button>
   <pre id="debug">starting…</pre>
-  <div id="tip">Move your phone slowly to scan the floor, then <b>tap the floor</b> to place an object. Walk around it.</div>
+  <div id="tip">Point at something and tap <b>Analyze</b>. In a couple of seconds, info cards appear anchored in your space.</div>
+
+  <div id="analyzeWrap">
+    <div id="analyzeStatus"></div>
+    <button id="analyzeBtn">Analyze</button>
+  </div>
 </body>
 </html>
