@@ -81,7 +81,7 @@ function makeCardEntity(label) {
   ctx.fillText('ⓘ  tap for details', pad, y + 4);
 
   const tex = new THREE.CanvasTexture(canvas); tex.anisotropy = 4;
-  const worldW = 0.42, worldH = worldW * (H / W);
+  const worldW = 0.36, worldH = worldW * (H / W);
   const mesh = new THREE.Mesh(new THREE.PlaneGeometry(worldW, worldH), new THREE.MeshBasicMaterial({ map: tex, transparent: true }));
   const el = document.createElement('a-entity');
   el.setObject3D('mesh', mesh);
@@ -109,7 +109,7 @@ if (window.AFRAME) {
       cam.getWorldQuaternion(this._q); this.el.object3D.quaternion.copy(this._q);
       cam.getWorldPosition(this._cp); this.el.object3D.getWorldPosition(this._op);
       const d = this._cp.distanceTo(this._op);
-      const s = Math.min(3.2, Math.max(0.6, d / 1.5));   // constant apparent size
+      const s = Math.min(3.5, Math.max(0.5, d / 2.0));   // constant (smaller) readable size
       this.el.object3D.scale.set(s, s, s);
     },
   });
@@ -150,33 +150,60 @@ if (window.AFRAME) {
         const objects = (data && data.objects) || [];
         dbg('analyze_result', { n: objects.length, model: data && data.model, tokens: data && data.tokens });
         if (!objects.length) { this.setStatus('Nothing recognized — try again'); this.busy = false; return; }
-        objects.forEach((o, i) => this.place(o, snap, i));
+        this.placeAll(objects, snap);
         this.setStatus(`Found ${objects.length}. Tap a card for details.`);
       } catch (e) { dbg('analyze_error', { e: String(e && e.message || e) }); this.setStatus('Analyze failed — check connection'); }
       this.busy = false;
     },
-    place(obj, snap, i) {
+    // Estimate the object's 3D anchor point (near the object): cast a ray through
+    // the box centre and use the floor-hit distance, clamped to a sane range.
+    anchorPoint(obj, cam) {
       const b = obj.box_2d || [0, 0, 1000, 1000];
       const cx = (b[1] + b[3]) / 2 / 1000, cy = (b[0] + b[2]) / 2 / 1000;
-      const ndc = new THREE.Vector2(cx * 2 - 1, -(cy * 2 - 1));
-      this.raycaster.setFromCamera(ndc, snap);
+      this.raycaster.setFromCamera(new THREE.Vector2(cx * 2 - 1, -(cy * 2 - 1)), cam);
       const origin = this.raycaster.ray.origin, dir = this.raycaster.ray.direction;
-
-      // Distance toward the object: use the floor hit if there is one, but CLAMP
-      // to a comfortable readable range so cards are never tiny-and-far or huge.
-      let dist = 2.0;
-      const hit = new THREE.Vector3();
+      let dist = 2.0; const hit = new THREE.Vector3();
       if (this.raycaster.ray.intersectPlane(this.ground, hit)) dist = origin.distanceTo(hit);
-      dist = Math.max(1.1, Math.min(dist, 3.0));
-
-      const point = origin.clone().add(dir.clone().multiplyScalar(dist));
-      point.y += 0.15 + (i || 0) * 0.28;   // lift + stagger so multiple cards don't overlap
-
-      const card = makeCardEntity(obj.label);
-      card.setAttribute('position', `${point.x.toFixed(3)} ${point.y.toFixed(3)} ${point.z.toFixed(3)}`);
-      card.addEventListener('click', () => openSheet(obj.label, obj.description));
-      this.el.appendChild(card);
-      dbg('placed', { label: obj.label, dist: +dist.toFixed(2) });
+      dist = Math.max(0.7, Math.min(dist, 4.0));
+      return origin.clone().add(dir.clone().multiplyScalar(dist));
+    },
+    smallDot(p) {
+      const e = document.createElement('a-entity');
+      e.setObject3D('mesh', new THREE.Mesh(new THREE.SphereGeometry(0.03, 12, 12), new THREE.MeshBasicMaterial({ color: 0x7cfc9a })));
+      e.setAttribute('position', `${p.x} ${p.y} ${p.z}`);
+      this.el.appendChild(e);
+    },
+    leader(a, b) {
+      const g = new THREE.BufferGeometry().setFromPoints([a.clone(), b.clone()]);
+      const l = new THREE.Line(g, new THREE.LineBasicMaterial({ color: 0x7cfc9a, transparent: true, opacity: 0.55 }));
+      const e = document.createElement('a-entity'); e.setObject3D('line', l); this.el.appendChild(e);
+    },
+    // Lay all labels out at once: dot ON each object, label pushed UP into empty
+    // space with guaranteed spacing (no overlap), connected by a leader line.
+    placeAll(objects, cam) {
+      const camPos = cam.getWorldPosition(new THREE.Vector3());
+      const items = objects.map((o) => { const a = this.anchorPoint(o, cam); return { o, a, ndc: a.clone().project(cam) }; });
+      items.sort((x, y) => x.ndc.y - y.ndc.y);          // bottom of screen first
+      const MIN_GAP = 0.26; let lastY = -2;
+      for (const it of items) {
+        let ly = Math.max(it.ndc.y + 0.10, lastY + MIN_GAP);  // above its object, spaced above the previous label
+        ly = Math.min(ly, 0.92);
+        lastY = ly;
+        it.lx = Math.max(-0.85, Math.min(0.85, it.ndc.x));
+        it.ly = ly;
+      }
+      for (const it of items) {
+        this.smallDot(it.a);
+        const dist = camPos.distanceTo(it.a);
+        const v = new THREE.Vector3(it.lx, it.ly, 0.5).unproject(cam);
+        const labelPos = camPos.clone().add(v.sub(camPos).normalize().multiplyScalar(dist));
+        const card = makeCardEntity(it.o.label);
+        card.setAttribute('position', `${labelPos.x.toFixed(3)} ${labelPos.y.toFixed(3)} ${labelPos.z.toFixed(3)}`);
+        const o = it.o; card.addEventListener('click', () => openSheet(o.label, o.description));
+        this.el.appendChild(card);
+        this.leader(it.a, labelPos);
+        dbg('placed', { label: o.label, dist: +dist.toFixed(2) });
+      }
     },
   });
 } else {
