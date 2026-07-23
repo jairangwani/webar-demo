@@ -1,95 +1,106 @@
-# WebAR Floor Demo (iPhone-first test)
+# WebAR System — browser AR on iPhone (no native app)
 
-A deliberately small, **modular** WebAR test. It opens the phone camera in the
-browser and draws a tile, a 3D box, and a text label lying flat on the floor —
-staying aligned as you tilt and turn the phone.
+A working web-app that does **augmented reality in the browser** — including real
+**world-tracking on iPhone Safari** (which has no WebXR). Built to prove the
+capability, then grow into a custom AR product.
 
-The point of this build is to **de-risk the iPhone**: confirm that camera access,
-motion-sensor permissions, and 3D overlay rendering all work in **iOS Safari**,
-using only free built-in browser APIs (no 8th Wall account needed yet).
+**Status: working and live.** All three modes below run on a real iPhone.
 
-## What it proves — and what it deliberately doesn't
+| Mode | What it is | Ours or theirs? | Real floor tracking |
+|---|---|---|---|
+| **World-tracking AR** (`world.html`) | Our custom 3D scene on the real **8th Wall SLAM** engine — tap the floor, place objects, walk around them | **100% ours** (engine is a plug-in) | ✅ real SLAM |
+| **ARKit Quick Look** (`index.html` → AR button) | Apple's built-in AR viewer showing a USDZ model on the floor | **Apple's** viewer, our model | ✅ real ARKit |
+| **Gyro overlay** (`index.html` → overlay) | Camera + 3D via gyroscope only — *no* floor sensing (a rough guess) | **Ours** | ❌ (no surface sensing) |
 
-| Capability | This demo | Notes |
-|---|---|---|
-| Open the camera in iOS Safari | ✅ | `getUserMedia`, rear camera |
-| Motion permission flow on iPhone | ✅ | iOS 13+ `requestPermission()` inside the tap |
-| Draw 3D content over the camera | ✅ | three.js, transparent canvas |
-| Keep content flat on the floor as you **tilt/turn** | ✅ | gyroscope (DeviceOrientation) |
-| Stay pinned as you **walk around** it (positional) | ❌ | needs SLAM → the 8th Wall provider |
+## Live URLs
+- App: **https://jairangwani.github.io/webar-demo/**
+- World-tracking AR (the real one): **https://jairangwani.github.io/webar-demo/world.html**
 
-iOS Safari has **no WebXR**, so true positional tracking (walking around a fixed
-object) is exactly what the 8th Wall engine adds next. This demo is the layer
-under that, and it's structured so 8th Wall drops in without touching the scene.
+## Is this open source? What do we own?
+- **All the code *we* wrote is ours and in this repo** — every demo, the scene,
+  tap-to-place, logging, UI. Yours to change freely.
+- **three.js** and **A-Frame** (the 3D frameworks): open-source, MIT licensed.
+- **The 8th Wall SLAM engine** (`@8thwall/engine-binary`, loaded from CDN): **free
+  to use, but NOT open source** — it's a compiled binary under a *limited-use
+  license*. We don't have (or need) its source; we call it. **Review its license
+  before a commercial launch** (github.com/8thwall/engine). Its helper libs
+  (`@8thwall/xrextras`) are MIT.
+- **ARKit Quick Look**: Apple's system viewer — we only supply the USDZ model.
 
-## Run it on your iPhone
+So: we own our app end-to-end; the hard "AR brain" (SLAM) is a free third-party
+engine we plug in. Nothing here requires a paid account today.
 
-The iPhone camera + motion sensors require **HTTPS with a valid certificate**.
-Serve the folder, then expose it through a tunnel that gives a trusted URL:
+## How the real world-tracking works (`world.html` + `src/world.js`)
+The 8th Wall engine runs **SLAM** on the camera video: it tracks feature points
+frame-to-frame to know how the phone moves in space, establishes the ground plane
+at `y=0`, and holds 6-DoF tracking. We drop content onto that plane and it stays
+anchored in the real world as you walk around it. Built on **A-Frame** (`xrweb`
+component = world tracking); tap-to-place raycasts the tap against an invisible
+ground plane and spawns an object at the hit point.
 
-```bash
-# 1. serve locally
-node server.mjs                       # http://localhost:8080
+### Integration gotchas we hit (read before touching `world.html`)
+These cost real debugging — documented so future-you doesn't repeat them:
+1. **three.js must be r125, as a global.** The engine expects `window.THREE` at
+   r125. We use **A-Frame 1.2.0**, which ships exactly r125. Do *not* load a
+   modern ESM three.js here.
+2. **You MUST preload the SLAM chunk.** The OSS engine lazy-loads SLAM as a
+   separate chunk; without it, `xrweb` crashes on init ("Failure loading node").
+   Fixed with `data-preload-chunks="slam"` on the engine `<script>` tag.
+3. **`crossorigin="anonymous"`** on the engine script — otherwise cross-origin
+   errors show as a useless "Script error. @:0".
+4. **SLAM is mobile-only.** On desktop the engine correctly reports
+   `isDeviceBrowserSupported:false` — that's expected, not a bug. Test on a phone.
+5. **iOS Safari caches aggressively.** After deploying, bump the `?v=N` query on
+   `world.js` (and open `world.html?v=N`) or Safari serves the stale page.
 
-# 2. expose over HTTPS (no account needed) — pick one:
-npx cloudflared tunnel --url http://localhost:8080
-#   -> gives a https://<random>.trycloudflare.com URL
+## Logging & on-device debug (so failures are never invisible)
+- `world.html` has a **green on-screen debug console** (top of screen, above the
+  loading spinner) showing every lifecycle event + error live on the phone.
+- It also **silently posts to a cloud sink** (webhook.site) so a test can be
+  diagnosed remotely. Read a session:
+  ```
+  curl -s "https://webhook.site/token/<TOKEN>/requests?sorting=newest&per_page=60"
+  ```
+  (current token is in `src/world.js` → `LOG_ENDPOINT`). Watch for
+  `✓ REALITY_READY` = tracking live; `✗ REALITY_ERROR` = the reason it failed.
+- The main demo (`index.html`) uses `src/logger.js` (anonymous userId + sessionId,
+  device/permission/error capture) posting to the same style of sink.
+- **Note:** webhook.site free tier is rate-limited / ~7-day retention — fine for
+  testing, swap for a permanent backend for production.
 
-# 3. open that HTTPS URL in Safari on the iPhone, tap "Start AR",
-#    Allow camera + Allow motion when prompted.
+## File map
 ```
-
-(Or deploy the folder to any static host — Vercel/Netlify/GitHub Pages — since
-it's just static files. There is no build step.)
-
-A small status HUD in the top-left shows `camera`, `motion`, and `gyro` state so
-you can see on-device exactly what initialised.
-
-## Architecture — where you scale up
-
-```
-index.html        entry + start gate + import map (three.js from CDN)
+index.html        landing (2 buttons) + gyro-overlay demo
+world.html        REAL 8th Wall SLAM world-tracking AR   ← the product path
 src/
-  main.js         thin orchestrator: camera + tracking + scene + content
-  camera.js       live camera feed (getUserMedia)
-  tracking.js     >>> THE SWAP POINT <<< tracking provider interface + v1 gyro provider
-  scene.js        three.js renderer / camera / resize
-  content.js      everything you SEE (tile, box, label) — add objects here
-  text-label.js   canvas-texture text helper
-  styles.css      layout + HUD
+  world.js        A-Frame components: world tracking + tap-to-place + debug/cloud log
+  main.js         gyro-overlay orchestrator
+  camera.js scene.js content.js tracking.js text-label.js  gyro-overlay modules
+  logger.js       session tracking + cloud logging (gyro demo)
+  config.js styles.css
+models/toy_car.usdz   model for Apple AR Quick Look
+server.mjs        zero-dep static server for local testing
 ```
 
-**To go to full positional AR:** write `EightWallTracking` implementing the same
-three methods as `OrientationTracking`
-(`requestPermission()`, `start()`, `applyTo(camera)`) and change one import line
-in `main.js`. `scene.js`, `content.js`, and `camera.js` stay untouched.
-
-**To add AR content:** edit `content.js` only. Swap the box for a glTF model with
-three's `GLTFLoader`, add more labels, etc.
-
-## Logging & session tracking
-
-`src/logger.js` gives every visitor a persistent anonymous **userId** + a per-visit
-**sessionId** (no passwords — lightweight "who did what" tracking), and captures
-device info, permission results, JS errors, and key events.
-
-- **In-app:** tap **Logs** (top-right) to view / **Copy** / **Download** the session log.
-- **Cloud:** each session flushes a self-contained snapshot to `CONFIG.LOG_ENDPOINT`
-  (`src/config.js`) via `fetch(no-cors)` + `sendBeacon` on exit. Current sink is a
-  **webhook.site** collector (free tier ≈ 7-day retention — a test-grade sink; graduate
-  to a permanent backend for production).
-
-**Read a user's test logs from the cloud** (newest first):
+## Deploy
+Hosted on **GitHub Pages** (free — requires the repo be public; see note below).
 ```
-curl -s "https://webhook.site/token/c299b7e3-e551-4cde-acdb-454476fc040d/requests?sorting=newest&per_page=10"
+git add -A
+git -c user.email="jairangwani@gmail.com" commit -m "..."   # commit hook requires this identity
+git push origin main        # Pages rebuilds in ~30s
 ```
-Each request body is a full JSON snapshot: `{ userId, sessionId, device, events[] }`.
-The HUD shows live `camera / motion / gyro / cloud / id` so on-device state is visible.
+After any `world.*` change, bump `?v=N` (cache-bust) and re-test on the phone.
 
-## Known upgrade path
-- **Motion denied on iPhone** → Settings → Safari → *Motion & Orientation Access* ON,
-  then reload / tap Retry. The app now surfaces this with a help panel + Retry button.
-- **Positional tracking (walk around content)** → write `EightWallTracking` in
-  `tracking.js`; swap one import in `main.js`.
-- **Permanent log backend** → replace the webhook.site endpoint with a serverless
-  function (Vercel/Cloudflare) writing to a DB.
+## Upgrade roadmap
+- [ ] Custom content in `world.html`: swap the cone for glTF models, add text/UI, multiple object types.
+- [ ] Our own HTML/CSS UI over the AR (buttons that open other pages — fully possible on this path).
+- [ ] Permanent cloud log backend (replace webhook.site).
+- [ ] Persistent anchors across sessions (VPS: Niantic Lightship / Immersal) for outdoor / same-spot content.
+- [ ] Semantic attachment (tree / road / specific object) — needs an ML detection layer on top of SLAM.
+- [ ] Review 8th Wall limited-use license terms before commercial launch.
+
+## Note on private repo + live URL
+GitHub Pages on a free plan needs a **public** repo. This code lives in a private
+repo for development; to keep the live test URL working, the public
+`jairangwani/webar-demo` repo mirrors it as the deploy target. Options to
+consolidate: GitHub Pro (private-repo Pages) or a deploy Action. See `spine/tasks.md`.
