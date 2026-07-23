@@ -42,17 +42,23 @@ canvas {
   padding: 24px;
 }
 
-.card { max-width: 340px; text-align: center; color: #eaf0ff; }
-.card h1 { font-size: 26px; margin-bottom: 14px; }
-.card p { font-size: 15px; line-height: 1.5; color: #b9c4de; margin-bottom: 22px; }
+.card { max-width: 350px; text-align: center; color: #eaf0ff; }
+.card h1 { font-size: 26px; margin-bottom: 20px; }
+.card p { font-size: 15px; line-height: 1.5; color: #b9c4de; }
+.card .sub { font-size: 12.5px; color: #8ea3cc; margin: 8px 0 22px; line-height: 1.45; }
+.card .sub b { color: #cdd7ee; }
 
-#startBtn {
-  appearance: none; border: 0; border-radius: 999px;
-  padding: 16px 40px; font-size: 18px; font-weight: 600;
+#arBtn, #startBtn {
+  appearance: none; border: 0; border-radius: 14px; width: 100%;
+  padding: 15px 20px; font-size: 16px; font-weight: 600;
   color: #05070d; background: #6ea8ff; cursor: pointer;
 }
-#startBtn:active { transform: scale(0.97); }
-.hint { margin-top: 16px; font-size: 13px; color: #ff9d9d; min-height: 18px; }
+#startBtn.secondary { background: transparent; color: #cdd7ee; border: 1px solid #35507a; }
+#arBtn:active, #startBtn:active { transform: scale(0.98); }
+.hint { margin-top: 8px; font-size: 13px; color: #ff9d9d; min-height: 18px; }
+
+/* the AR anchor is just a trigger — keep it out of the layout */
+#arLink { position: absolute; width: 1px; height: 1px; overflow: hidden; opacity: 0; pointer-events: none; }
 
 /* Tiny status HUD (top-left) */
 #status {

@@ -24,16 +24,28 @@
   <video id="camera" playsinline autoplay muted></video>
   <!-- Layer 2: transparent 3D canvas (inserted by three.js) -->
 
-  <!-- Start gate: iOS needs a user tap before camera + motion access -->
+  <!-- Start gate: two clearly-labelled tests -->
   <div id="gate">
     <div class="card">
       <h1>WebAR Floor Test</h1>
-      <p>Point your phone at the floor a couple of metres ahead, then tap start.
-         Tilt and turn to see the tile stay flat on the ground.</p>
-      <button id="startBtn">Start AR</button>
+
+      <button id="arBtn">Real AR floor test (ARKit) →</button>
+      <p class="sub">Uses your iPhone's real surface detection. Point at the floor,
+         tap <b>AR</b>, and a car locks to the actual ground — walk around it. This is
+         the true capability test.</p>
+
+      <button id="startBtn" class="secondary">Custom overlay demo (experimental)</button>
+      <p class="sub">Our own 3D scene using only the gyroscope — <b>no floor sensing</b>,
+         so it's a rough guess. Tap the screen anytime to re-place it.</p>
+
       <p class="hint" id="hint"></p>
     </div>
   </div>
+
+  <!-- Hidden AR Quick Look anchor (iOS ARKit). Triggered by the button above. -->
+  <a id="arLink" rel="ar" href="./models/toy_car.usdz">
+    <img alt="" src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" />
+  </a>
 
   <!-- Tiny status HUD (top-left) — not a pop-up, just live state -->
   <div id="status" hidden></div>

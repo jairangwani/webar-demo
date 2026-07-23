@@ -20,6 +20,7 @@ const MIME = {
   '.svg': 'image/svg+xml',
   '.png': 'image/png',
   '.glb': 'model/gltf-binary',
+  '.usdz': 'model/vnd.usdz+zip',
 };
 
 createServer(async (req, res) => {

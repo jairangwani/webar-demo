@@ -13,6 +13,20 @@ const $ = (id) => document.getElementById(id);
 const gate = $('gate'), startBtn = $('startBtn'), hint = $('hint');
 const statusEl = $('status'), video = $('camera');
 const motionBanner = $('motionBanner'), motionMsg = $('motionMsg');
+const arBtn = $('arBtn'), arLink = $('arLink');
+
+// AR Quick Look (real ARKit) is iOS-only. Feature-detect it.
+const arSupported = !!(arLink && arLink.relList && arLink.relList.supports && arLink.relList.supports('ar'));
+
+arBtn.addEventListener('click', () => {
+  logger.event('ar_quicklook_open', { supported: arSupported });
+  logger.flush();
+  if (arSupported) {
+    arLink.click();   // hands off to Safari's ARKit viewer
+  } else {
+    hint.textContent = 'Real AR (ARKit) needs iPhone/iPad Safari. On other devices, try the overlay demo below.';
+  }
+});
 
 const tracking = new OrientationTracking();
 const report = { camera: '…', motion: '…' };
@@ -77,6 +91,15 @@ async function start() {
   gate.style.display = 'none';
   refreshHUD();
   setInterval(refreshHUD, 500);
+
+  // Tap anywhere (except the banner) to re-place the floor content in the
+  // direction you're currently facing — the "recalibrate" the gyro demo needs.
+  window.addEventListener('pointerdown', (e) => {
+    if (e.target.closest && e.target.closest('#motionBanner')) return;
+    if (!tracking.hasData) return;
+    content.calibrate(camera);
+    logger.event('recalibrate');
+  });
 
   // 4) Frame loop
   let frames = 0, lastFps = performance.now(), sampledOrientation = false;
