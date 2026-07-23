@@ -48,13 +48,16 @@ canvas {
 .card .sub { font-size: 12.5px; color: #8ea3cc; margin: 8px 0 22px; line-height: 1.45; }
 .card .sub b { color: #cdd7ee; }
 
-#arBtn, #startBtn {
+#worldBtn, #arBtn, #startBtn {
+  display: block; text-decoration: none; text-align: center;
   appearance: none; border: 0; border-radius: 14px; width: 100%;
   padding: 15px 20px; font-size: 16px; font-weight: 600;
   color: #05070d; background: #6ea8ff; cursor: pointer;
 }
+#worldBtn { background: linear-gradient(135deg, #7cf29a, #4bd0ff); }
+#arBtn { background: #6ea8ff; }
 #startBtn.secondary { background: transparent; color: #cdd7ee; border: 1px solid #35507a; }
-#arBtn:active, #startBtn:active { transform: scale(0.98); }
+#worldBtn:active, #arBtn:active, #startBtn:active { transform: scale(0.98); }
 .hint { margin-top: 8px; font-size: 13px; color: #ff9d9d; min-height: 18px; }
 
 /* the AR anchor is just a trigger — keep it out of the layout */

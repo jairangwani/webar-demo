@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <link rel="icon" href="data:," />
+  <title>Real World-Tracking AR — 8th Wall</title>
+
+  <!-- A-Frame 1.2.0 ships THREE r125 (exactly what the 8th Wall engine expects).
+       Load it FIRST so the engine auto-registers its A-Frame components. -->
+  <script src="https://aframe.io/releases/1.2.0/aframe.min.js"></script>
+  <!-- 8th Wall helper UI (loading / errors) -->
+  <script src="https://cdn.jsdelivr.net/npm/@8thwall/xrextras@1/dist/xrextras.js"></script>
+  <!-- 8th Wall engine binary — the real free SLAM world-tracking engine (no key) -->
+  <script src="https://cdn.jsdelivr.net/npm/@8thwall/engine-binary@1/dist/xr.js"></script>
+  <!-- our A-Frame components (register before <a-scene> is parsed) -->
+  <script src="./src/world.js"></script>
+
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html, body { width: 100%; height: 100%; margin: 0; overflow: hidden; background: #000;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+    #tip {
+      position: fixed; left: 12px; right: 12px; bottom: max(18px, env(safe-area-inset-bottom));
+      z-index: 20; text-align: center; color: #eaf0ff; font-size: 15px; line-height: 1.4;
+      background: rgba(12,18,30,0.82); border: 1px solid #26324b; border-radius: 12px;
+      padding: 12px 14px; backdrop-filter: blur(8px);
+    }
+    #back { position: fixed; top: max(12px, env(safe-area-inset-top)); left: 12px; z-index: 21;
+      color: #dfe8ff; text-decoration: none; font-size: 14px; font-weight: 600;
+      background: rgba(0,0,0,0.5); padding: 8px 12px; border-radius: 8px; }
+  </style>
+</head>
+<body>
+  <a-scene
+    xrweb
+    xrextras-loading
+    xrextras-runtime-error
+    cloud-log
+    tap-place-ground
+    renderer="colorManagement: true"
+    device-orientation-permission-ui="enabled: false">
+    <a-camera
+      position="0 1.6 0"
+      raycaster="objects: .cantap"
+      cursor="fuse: false; rayOrigin: mouse"></a-camera>
+
+    <a-light type="ambient" intensity="0.9"></a-light>
+    <a-light type="directional" intensity="0.8" position="3 10 5"></a-light>
+
+    <!-- invisible ground plane at y=0 to catch taps (the engine puts the real floor here) -->
+    <a-entity id="ground" class="cantap"
+      geometry="primitive: plane; width: 200; height: 200"
+      rotation="-90 0 0"
+      material="opacity: 0; transparent: true"
+      position="0 0 0"></a-entity>
+  </a-scene>
+
+  <a id="back" href="./">‹ Back</a>
+  <div id="tip">Move your phone slowly to scan the floor, then <b>tap the floor</b> to place an object. Walk around it.</div>
+</body>
+</html>
