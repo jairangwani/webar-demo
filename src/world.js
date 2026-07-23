@@ -99,8 +99,19 @@ function roundRect(ctx, x, y, w, h, r) { ctx.beginPath(); ctx.moveTo(x + r, y); 
 if (window.AFRAME) {
   dbg('aframe_present', { v: AFRAME.version, three: window.THREE && THREE.REVISION });
 
+  // Always face the user (using WORLD orientation — 8th Wall keeps the device
+  // pose on the world transform) and keep a constant readable on-screen size
+  // regardless of how far the card is.
   AFRAME.registerComponent('billboard', {
-    tick() { const cam = this.el.sceneEl && this.el.sceneEl.camera; if (cam) this.el.object3D.quaternion.copy(cam.quaternion); },
+    init() { this._q = new THREE.Quaternion(); this._cp = new THREE.Vector3(); this._op = new THREE.Vector3(); },
+    tick() {
+      const cam = this.el.sceneEl && this.el.sceneEl.camera; if (!cam) return;
+      cam.getWorldQuaternion(this._q); this.el.object3D.quaternion.copy(this._q);
+      cam.getWorldPosition(this._cp); this.el.object3D.getWorldPosition(this._op);
+      const d = this._cp.distanceTo(this._op);
+      const s = Math.min(3.2, Math.max(0.6, d / 1.5));   // constant apparent size
+      this.el.object3D.scale.set(s, s, s);
+    },
   });
 
   AFRAME.registerComponent('cloud-log', {
@@ -139,26 +150,33 @@ if (window.AFRAME) {
         const objects = (data && data.objects) || [];
         dbg('analyze_result', { n: objects.length, model: data && data.model, tokens: data && data.tokens });
         if (!objects.length) { this.setStatus('Nothing recognized — try again'); this.busy = false; return; }
-        objects.forEach((o) => this.place(o, snap));
+        objects.forEach((o, i) => this.place(o, snap, i));
         this.setStatus(`Found ${objects.length}. Tap a card for details.`);
       } catch (e) { dbg('analyze_error', { e: String(e && e.message || e) }); this.setStatus('Analyze failed — check connection'); }
       this.busy = false;
     },
-    place(obj, snap) {
+    place(obj, snap, i) {
       const b = obj.box_2d || [0, 0, 1000, 1000];
       const cx = (b[1] + b[3]) / 2 / 1000, cy = (b[0] + b[2]) / 2 / 1000;
       const ndc = new THREE.Vector2(cx * 2 - 1, -(cy * 2 - 1));
       this.raycaster.setFromCamera(ndc, snap);
+      const origin = this.raycaster.ray.origin, dir = this.raycaster.ray.direction;
+
+      // Distance toward the object: use the floor hit if there is one, but CLAMP
+      // to a comfortable readable range so cards are never tiny-and-far or huge.
+      let dist = 2.0;
       const hit = new THREE.Vector3();
-      let point = this.raycaster.ray.intersectPlane(this.ground, hit);
-      if (!point || this.raycaster.ray.origin.distanceTo(hit) > 12) {
-        point = this.raycaster.ray.origin.clone().add(this.raycaster.ray.direction.clone().multiplyScalar(2.5));
-      }
+      if (this.raycaster.ray.intersectPlane(this.ground, hit)) dist = origin.distanceTo(hit);
+      dist = Math.max(1.1, Math.min(dist, 3.0));
+
+      const point = origin.clone().add(dir.clone().multiplyScalar(dist));
+      point.y += 0.15 + (i || 0) * 0.28;   // lift + stagger so multiple cards don't overlap
+
       const card = makeCardEntity(obj.label);
-      card.setAttribute('position', `${point.x.toFixed(3)} ${(point.y + 0.35).toFixed(3)} ${point.z.toFixed(3)}`);
+      card.setAttribute('position', `${point.x.toFixed(3)} ${point.y.toFixed(3)} ${point.z.toFixed(3)}`);
       card.addEventListener('click', () => openSheet(obj.label, obj.description));
       this.el.appendChild(card);
-      dbg('placed', { label: obj.label });
+      dbg('placed', { label: obj.label, dist: +dist.toFixed(2) });
     },
   });
 } else {
