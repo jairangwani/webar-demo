@@ -66,3 +66,30 @@ in `main.js`. `scene.js`, `content.js`, and `camera.js` stay untouched.
 
 **To add AR content:** edit `content.js` only. Swap the box for a glTF model with
 three's `GLTFLoader`, add more labels, etc.
+
+## Logging & session tracking
+
+`src/logger.js` gives every visitor a persistent anonymous **userId** + a per-visit
+**sessionId** (no passwords — lightweight "who did what" tracking), and captures
+device info, permission results, JS errors, and key events.
+
+- **In-app:** tap **Logs** (top-right) to view / **Copy** / **Download** the session log.
+- **Cloud:** each session flushes a self-contained snapshot to `CONFIG.LOG_ENDPOINT`
+  (`src/config.js`) via `fetch(no-cors)` + `sendBeacon` on exit. Current sink is a
+  **webhook.site** collector (free tier ≈ 7-day retention — a test-grade sink; graduate
+  to a permanent backend for production).
+
+**Read a user's test logs from the cloud** (newest first):
+```
+curl -s "https://webhook.site/token/c299b7e3-e551-4cde-acdb-454476fc040d/requests?sorting=newest&per_page=10"
+```
+Each request body is a full JSON snapshot: `{ userId, sessionId, device, events[] }`.
+The HUD shows live `camera / motion / gyro / cloud / id` so on-device state is visible.
+
+## Known upgrade path
+- **Motion denied on iPhone** → Settings → Safari → *Motion & Orientation Access* ON,
+  then reload / tap Retry. The app now surfaces this with a help panel + Retry button.
+- **Positional tracking (walk around content)** → write `EightWallTracking` in
+  `tracking.js`; swap one import in `main.js`.
+- **Permanent log backend** → replace the webhook.site endpoint with a serverless
+  function (Vercel/Cloudflare) writing to a DB.
