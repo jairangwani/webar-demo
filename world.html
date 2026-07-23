@@ -13,8 +13,11 @@
   <script src="https://aframe.io/releases/1.2.0/aframe.min.js"></script>
   <!-- 8th Wall helper UI (loading / errors) -->
   <script src="https://cdn.jsdelivr.net/npm/@8thwall/xrextras@1/dist/xrextras.js"></script>
-  <!-- 8th Wall engine binary — the real free SLAM world-tracking engine (no key) -->
-  <script src="https://cdn.jsdelivr.net/npm/@8thwall/engine-binary@1/dist/xr.js"></script>
+  <!-- 8th Wall engine binary — the real free SLAM world-tracking engine (no key).
+       data-preload-chunks="slam" is REQUIRED for world tracking: the OSS engine
+       loads SLAM as a lazy chunk, and without preloading it xrweb crashes on init.
+       crossorigin="anonymous" also unmasks cross-origin error messages. -->
+  <script src="https://cdn.jsdelivr.net/npm/@8thwall/engine-binary@1/dist/xr.js" crossorigin="anonymous" data-preload-chunks="slam"></script>
   <!-- our A-Frame components (register before <a-scene> is parsed) -->
   <script src="./src/world.js"></script>
 
