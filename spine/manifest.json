@@ -1,0 +1,18 @@
+{
+  "shapeVersion": 1,
+  "id": "webar-demo",
+  "name": "webar-demo",
+  "type": "solo",
+  "profile": "software",
+  "lifecycle": "active",
+  "owner": "jai",
+  "space": "work",
+  "repo": {
+    "path": "C:/Users/jaira/Desktop/code/webar-demo",
+    "remote": null
+  },
+  "branches": [],
+  "bones": {
+    "tasks": true
+  }
+}
