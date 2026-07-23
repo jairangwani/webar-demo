@@ -41,6 +41,39 @@
   <!-- Small on-screen status so we can SEE what worked on the iPhone -->
   <div id="status" hidden></div>
 
+  <!-- Logs button (top-right) -->
+  <button id="logsBtn" hidden>Logs</button>
+
+  <!-- Motion help panel: shown if motion permission is denied/unsupported -->
+  <div id="motionHelp" hidden>
+    <div class="panel">
+      <h2>Motion access is off</h2>
+      <p>The floor alignment needs the phone's motion sensors. To enable on iPhone:</p>
+      <ol>
+        <li>Open <b>Settings → Safari</b></li>
+        <li>Turn on <b>Motion &amp; Orientation Access</b></li>
+        <li>Come back and tap <b>Retry</b> (or reload)</li>
+      </ol>
+      <div class="row">
+        <button id="retryMotion">Retry</button>
+        <button id="dismissMotion" class="ghost">Continue without</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Logs overlay -->
+  <div id="logsView" hidden>
+    <div class="panel wide">
+      <h2>Session log</h2>
+      <pre id="logsText"></pre>
+      <div class="row">
+        <button id="copyLogs">Copy</button>
+        <button id="downloadLogs" class="ghost">Download</button>
+        <button id="closeLogs" class="ghost">Close</button>
+      </div>
+    </div>
+  </div>
+
   <script type="module" src="./src/main.js"></script>
 </body>
 </html>

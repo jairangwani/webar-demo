@@ -88,7 +88,12 @@ export class OrientationTracking {
     // A positional provider (8th Wall) would also set camera.position here.
   }
 
+  get hasData() {
+    return !!this.deviceOrientation;
+  }
+
   get statusLabel() {
+    if (!this.enabled) return 'gyro: off';
     return this.deviceOrientation ? 'gyro: live' : 'gyro: waiting…';
   }
 }
