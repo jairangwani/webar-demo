@@ -1,5 +1,7 @@
-// main.js — orchestrates camera + tracking + scene + content, wires logging,
-// and handles the motion-permission retry flow.
+// main.js — orchestrates camera + tracking + scene + content. Logging is SILENT
+// and cloud-only (no in-app UI): you just open + test, and I read the session
+// from the cloud. The only on-screen chrome is a tiny status HUD and a slim
+// motion banner that appears ONLY if motion sensors are blocked.
 
 import { startCamera } from './camera.js';
 import { createScene } from './scene.js';
@@ -9,8 +11,8 @@ import { logger } from './logger.js';
 
 const $ = (id) => document.getElementById(id);
 const gate = $('gate'), startBtn = $('startBtn'), hint = $('hint');
-const statusEl = $('status'), video = $('camera'), logsBtn = $('logsBtn');
-const motionHelp = $('motionHelp'), logsView = $('logsView');
+const statusEl = $('status'), video = $('camera');
+const motionBanner = $('motionBanner'), motionMsg = $('motionMsg');
 
 const tracking = new OrientationTracking();
 const report = { camera: '…', motion: '…' };
@@ -23,22 +25,22 @@ function refreshHUD() {
     `motion: ${report.motion}`,
     tracking.statusLabel,
     `cloud: ${logger.cloud}`,
-    `id: ${logger.userId.slice(0, 8)}`,
   ].join('<br>');
 }
 
 async function requestMotion() {
   const perm = await tracking.requestPermission();
   report.motion = perm;
-  logger.event('motion_permission', { result: perm });
+  logger.event('motion_permission', { result: perm, hasRequestApi: typeof (window.DeviceOrientationEvent || {}).requestPermission === 'function' });
   logger.flush();
   if (perm === 'granted') {
     tracking.start();
-    motionHelp.hidden = true;
+    motionBanner.hidden = true;
   } else {
-    // denied or unsupported — show help + retry, keep the experience running.
-    motionHelp.hidden = false;
-    hint.textContent = 'Motion ' + perm + ' — see the on-screen steps.';
+    motionMsg.innerHTML = perm === 'unsupported'
+      ? 'This browser reports no motion sensors.'
+      : 'Motion sensors are off. Enable <b>Settings ▸ Safari ▸ Motion &amp; Orientation Access</b>, then';
+    motionBanner.hidden = false;
   }
   refreshHUD();
   return perm;
@@ -47,7 +49,6 @@ async function requestMotion() {
 async function start() {
   startBtn.disabled = true;
   hint.textContent = '';
-  logsBtn.hidden = false;
   logger.event('start_tapped');
 
   // 1) Camera
@@ -78,27 +79,33 @@ async function start() {
   setInterval(refreshHUD, 500);
 
   // 4) Frame loop
-  let frames = 0, lastFps = performance.now();
+  let frames = 0, lastFps = performance.now(), sampledOrientation = false;
   renderer.setAnimationLoop(() => {
     tracking.applyTo(camera);
 
-    // First time we actually get gyro data: calibrate the floor content to face
-    // the user, and log it so we can confirm tracking went live on-device.
-    if (!calibrated && tracking.hasData) {
-      content.calibrate(camera);
-      calibrated = true;
-      logger.event('gyro_live_calibrated');
-      logger.flush();
+    if (tracking.hasData) {
+      // Log one real orientation sample so I can confirm sensor data is genuine.
+      if (!sampledOrientation) {
+        const d = tracking.deviceOrientation;
+        logger.event('orientation_sample', { alpha: Math.round(d.alpha), beta: Math.round(d.beta), gamma: Math.round(d.gamma) });
+        sampledOrientation = true;
+      }
+      // First real data → drop the floor content in front of the user.
+      if (!calibrated) {
+        content.calibrate(camera);
+        calibrated = true;
+        logger.event('gyro_live_calibrated');
+        logger.flush();
+      }
     }
 
     content.update(camera);
     renderer.render(scene, camera);
 
-    // sample fps roughly every 5s (keeps cloud traffic light)
     frames++;
     const now = performance.now();
     if (now - lastFps >= 5000) {
-      logger.event('fps', { fps: Math.round((frames * 1000) / (now - lastFps)), calibrated });
+      logger.event('fps', { fps: Math.round((frames * 1000) / (now - lastFps)), calibrated, motion: report.motion });
       frames = 0; lastFps = now;
     }
   });
@@ -106,36 +113,15 @@ async function start() {
   logger.flush();
 }
 
-// --- Retry / dismiss motion help ---
+// Motion banner actions
 $('retryMotion').addEventListener('click', async () => {
   logger.event('motion_retry');
   await requestMotion();
 });
 $('dismissMotion').addEventListener('click', () => {
-  motionHelp.hidden = true;
+  motionBanner.hidden = true;
   logger.event('motion_dismissed');
 });
 
-// --- Logs viewer ---
-function openLogs() {
-  $('logsText').textContent = logger.getText();
-  logsView.hidden = false;
-}
-logsBtn.addEventListener('click', openLogs);
-$('closeLogs').addEventListener('click', () => { logsView.hidden = true; });
-$('copyLogs').addEventListener('click', async () => {
-  try { await navigator.clipboard.writeText(logger.getText()); $('copyLogs').textContent = 'Copied ✓'; }
-  catch { $('copyLogs').textContent = 'Copy failed'; }
-  setTimeout(() => { $('copyLogs').textContent = 'Copy'; }, 1500);
-});
-$('downloadLogs').addEventListener('click', () => {
-  const blob = new Blob([logger.getText()], { type: 'text/plain' });
-  const a = document.createElement('a');
-  a.href = URL.createObjectURL(blob);
-  a.download = `webar-log-${logger.sessionId.slice(0, 8)}.txt`;
-  a.click();
-  URL.revokeObjectURL(a.href);
-});
-
 startBtn.addEventListener('click', start, { once: true });
-refreshHUD();
+// HUD stays hidden until Start, so the landing screen is clean.

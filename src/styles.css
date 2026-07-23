@@ -1,5 +1,10 @@
 * { margin: 0; padding: 0; box-sizing: border-box; }
 
+/* CRITICAL: make the `hidden` attribute always win, even against ID selectors.
+   (Without this, an ID rule with display:flex overrides [hidden] and elements
+   that should be hidden show anyway — the bug that trapped the log pop-up.) */
+[hidden] { display: none !important; }
+
 html, body {
   width: 100%;
   height: 100%;
@@ -10,7 +15,6 @@ html, body {
   user-select: none;
 }
 
-/* The camera feed fills the screen behind everything */
 #camera {
   position: fixed;
   inset: 0;
@@ -20,14 +24,13 @@ html, body {
   z-index: 0;
 }
 
-/* three.js canvas is inserted by JS and sits above the video */
 canvas {
   position: fixed;
   inset: 0;
   z-index: 1;
 }
 
-/* Start gate overlay */
+/* Start gate */
 #gate {
   position: fixed;
   inset: 0;
@@ -39,31 +42,19 @@ canvas {
   padding: 24px;
 }
 
-.card {
-  max-width: 340px;
-  text-align: center;
-  color: #eaf0ff;
-}
-
+.card { max-width: 340px; text-align: center; color: #eaf0ff; }
 .card h1 { font-size: 26px; margin-bottom: 14px; }
 .card p { font-size: 15px; line-height: 1.5; color: #b9c4de; margin-bottom: 22px; }
 
 #startBtn {
-  appearance: none;
-  border: 0;
-  border-radius: 999px;
-  padding: 16px 40px;
-  font-size: 18px;
-  font-weight: 600;
-  color: #05070d;
-  background: #6ea8ff;
-  cursor: pointer;
+  appearance: none; border: 0; border-radius: 999px;
+  padding: 16px 40px; font-size: 18px; font-weight: 600;
+  color: #05070d; background: #6ea8ff; cursor: pointer;
 }
 #startBtn:active { transform: scale(0.97); }
-
 .hint { margin-top: 16px; font-size: 13px; color: #ff9d9d; min-height: 18px; }
 
-/* Live status HUD (top-left) so we can confirm on-device what initialised */
+/* Tiny status HUD (top-left) */
 #status {
   position: fixed;
   top: max(12px, env(safe-area-inset-top));
@@ -72,76 +63,36 @@ canvas {
   font-size: 12px;
   line-height: 1.4;
   color: #dfe8ff;
-  background: rgba(0,0,0,0.45);
-  padding: 8px 10px;
+  background: rgba(0,0,0,0.4);
+  padding: 7px 9px;
   border-radius: 8px;
   backdrop-filter: blur(6px);
-  max-width: 70vw;
+  max-width: 66vw;
 }
 
-/* Logs button (top-right) */
-#logsBtn {
+/* Slim dismissible motion banner (bottom) — never blocks the view */
+#motionBanner {
   position: fixed;
-  top: max(12px, env(safe-area-inset-top));
-  right: 12px;
-  z-index: 6;
-  appearance: none;
-  border: 0;
-  border-radius: 8px;
-  padding: 8px 14px;
-  font-size: 13px;
-  font-weight: 600;
-  color: #dfe8ff;
-  background: rgba(0,0,0,0.5);
-  backdrop-filter: blur(6px);
-}
-
-/* Panels (motion help + logs) */
-#motionHelp, #logsView {
-  position: fixed;
-  inset: 0;
-  z-index: 20;
+  left: 12px; right: 12px;
+  bottom: max(14px, env(safe-area-inset-bottom));
+  z-index: 15;
   display: flex;
   align-items: center;
-  justify-content: center;
-  background: rgba(3,6,12,0.72);
-  backdrop-filter: blur(4px);
-  padding: 20px;
-}
-
-.panel {
-  max-width: 360px;
-  width: 100%;
-  background: #121a2b;
-  color: #eaf0ff;
+  gap: 10px;
+  padding: 10px 12px;
+  border-radius: 12px;
+  background: rgba(18,26,43,0.92);
   border: 1px solid #26324b;
-  border-radius: 16px;
-  padding: 22px;
+  backdrop-filter: blur(8px);
+  color: #eaf0ff;
+  font-size: 13px;
+  line-height: 1.35;
 }
-.panel.wide { max-width: 92vw; }
-.panel h2 { font-size: 20px; margin-bottom: 12px; }
-.panel p { font-size: 14px; color: #b9c4de; margin-bottom: 12px; line-height: 1.5; }
-.panel ol { margin: 0 0 18px 18px; font-size: 14px; color: #cdd7ee; line-height: 1.7; }
-.panel .row { display: flex; gap: 10px; }
-
-.panel button {
-  appearance: none; border: 0; border-radius: 10px;
-  padding: 12px 18px; font-size: 15px; font-weight: 600;
-  color: #05070d; background: #6ea8ff; cursor: pointer; flex: 1;
+#motionBanner span { flex: 1; }
+#motionBanner b { color: #cfe0ff; }
+#motionBanner button {
+  appearance: none; border: 0; border-radius: 8px;
+  padding: 8px 12px; font-size: 13px; font-weight: 600;
+  color: #05070d; background: #6ea8ff; white-space: nowrap;
 }
-.panel button.ghost { background: transparent; color: #9fb2d8; border: 1px solid #35507a; }
-
-#logsText {
-  max-height: 52vh;
-  overflow: auto;
-  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
-  font-size: 11px;
-  line-height: 1.45;
-  color: #cfe0ff;
-  background: #0a1120;
-  border-radius: 10px;
-  padding: 12px;
-  margin-bottom: 16px;
-  white-space: pre-wrap;
-  word-break: break-word;
-}
+#motionBanner #dismissMotion { background: transparent; color: #8ea3cc; padding: 8px 10px; }
