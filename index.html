@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <!-- viewport-fit=cover so we can go full-bleed under the iPhone notch/home bar -->
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <link rel="icon" href="data:," />
+  <title>WebAR Floor Demo</title>
+
+  <!-- three.js via import map. iOS Safari 16.4+ supports import maps.
+       This is the ONLY external dependency, loaded from a CDN — no build step. -->
+  <script type="importmap">
+  {
+    "imports": {
+      "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js"
+    }
+  }
+  </script>
+
+  <link rel="stylesheet" href="./src/styles.css" />
+</head>
+<body>
+  <!-- Layer 1: the live camera feed -->
+  <video id="camera" playsinline autoplay muted></video>
+
+  <!-- Layer 2: the transparent 3D canvas is created by three.js and stacked on top -->
+
+  <!-- Start gate: iOS requires a user tap before it will grant camera + motion access -->
+  <div id="gate">
+    <div class="card">
+      <h1>WebAR Floor Test</h1>
+      <p>Point your phone at the floor a couple of metres ahead, then tap start.
+         Tilt and turn to see the tile stay flat on the ground.</p>
+      <button id="startBtn">Start AR</button>
+      <p class="hint" id="hint"></p>
+    </div>
+  </div>
+
+  <!-- Small on-screen status so we can SEE what worked on the iPhone -->
+  <div id="status" hidden></div>
+
+  <script type="module" src="./src/main.js"></script>
+</body>
+</html>
