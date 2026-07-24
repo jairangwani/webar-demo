@@ -1,0 +1,7 @@
+{
+  "name": "ar-analyze-backend",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Scalable Gemini vision proxy for the WebAR analyze feature (keeps the API key server-side)."
+}

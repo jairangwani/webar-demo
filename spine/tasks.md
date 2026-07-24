@@ -1,22 +1,25 @@
-# 📋 Tasks — webar-demo
+# 📋 Tasks — webar-demo (AR Analyze)
 > `[ ]` open · `[>]` later · `[x]` done · _in progress = a live session lock (set automatically, not by hand)_
+> Full context in `../README.md` (the source of truth).
 
-## Done
-- [x] Prove iPhone browser can open camera + sensors (gyro overlay demo)
-- [x] ARKit Quick Look real-floor test (USDZ) on iPhone
-- [x] Real 8th Wall SLAM world-tracking AR working on iPhone (tap floor → place object → walk around)
-- [x] On-device debug console + cloud logging to diagnose remotely
-- [x] Fix world-tracking crash (preload SLAM chunk) + cache-busting
-- [x] Comprehensive docs (README) + push to private repo
+## Done (v1 — the "point & identify" core)
+- [x] iPhone browser AR proven (camera + sensors + render)
+- [x] Real 8th Wall SLAM world-tracking (iOS + Android)
+- [x] AR Analyze: tap Analyze → Gemini vision backend → objects identified
+- [x] Our own scalable backend (Vercel proxy, key server-side) — `ar-backend-three.vercel.app`
+- [x] Info cards anchored in 3D; title-only card + tap → 2D bottom info sheet
+- [x] Smart placement: dot on object + leader line + non-overlapping label layout, billboard + constant size
+- [x] Clean beta URL for testers: `lookar.vercel.app` (no github/name)
+- [x] Full docs: README.md, CLAUDE.md, backend/README.md
 
-## Open (next upgrades)
-- [ ] Replace the placeholder cone with real glTF models in `world.html`
-- [ ] Add our own HTML/CSS UI over the AR (buttons that open other pages)
-- [ ] Add multiple object types + a simple content picker
-- [ ] Stand up a permanent cloud log backend (replace webhook.site free tier)
+## Open (next)
+- [ ] Depth-aware placement (float labels into real empty pockets; occlusion) — needs depth/VPS
+- [ ] Tune spacing/size constants if cards crowd (`MIN_GAP`, billboard scale, card `worldW` in src/world.js)
+- [ ] Custom domain for the beta URL (point a domain at the `lookar` Vercel project)
+- [ ] Permanent cloud log backend (replace webhook.site free tier)
 
 ## Later
-- [>] Persistent world anchors across sessions (VPS: Lightship / Immersal) for outdoor / same-spot content
-- [>] Semantic attachment (tree / road / specific object) — ML detection layer on top of SLAM
-- [>] Consolidate hosting: GitHub Pro private-repo Pages, or a deploy Action (private → public)
+- [>] Persistent anchors across sessions / same real-world spot outdoors (VPS: Lightship / Immersal)
+- [>] Semantic attachment to specific things (tree/road/person) beyond SLAM planes — needs extra ML
+- [>] "Much more functionality" (per Jai) — this is v1 of the core
 - [>] Review 8th Wall engine-binary limited-use license before commercial launch
