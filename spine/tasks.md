@@ -18,6 +18,12 @@
 - [ ] Custom domain for the beta URL (point a domain at the `lookar` Vercel project)
 - [ ] Permanent cloud log backend (replace webhook.site free tier)
 
+## Requested by stakeholder (Scott) — planned features
+- [ ] **Custom content DB + specific-object recognition**: return OUR pre-uploaded info for a *specific* item (e.g. this exact car's owner story/cost), not just generic ID. Match via tag/QR on object, reference-image match, or attributes+GPS. (Product moat.)
+- [ ] **QR-code launch**: scan a QR → opens the web app (already URL-based); encode object/venue ID in the URL so a specific QR pre-loads that experience + auto-analyze.
+- [ ] **Ad serving**: sponsor badge / branded cards / interstitials, contextual targeting (car→auto brands), impression+tap tracking. Revenue model.
+- [ ] **Geolocated info + ads (later)**: GPS-level "you're at X → history + nearby offers" (soon); precise persistent outdoor anchoring via VPS (Lightship/Immersal/Google Geospatial) for location-anchored ads (bigger build).
+
 ## Later
 - [>] Persistent anchors across sessions / same real-world spot outdoors (VPS: Lightship / Immersal)
 - [>] Semantic attachment to specific things (tree/road/person) beyond SLAM planes — needs extra ML
