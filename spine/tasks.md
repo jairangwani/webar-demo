@@ -3,21 +3,13 @@
 > Shape: **NOW / NEXT / GATED / LATER** ([[R-063]], 2026-07-29). Everything this file said before —
 > every old heading, its prose, and every completed item — is kept verbatim in `archive/tasks-2026-07-29-pre-shape.md`.
 
-- [ ] Depth-aware placement (float labels into real empty pockets; occlusion) — needs depth/VPS
 
-- [ ] Tune spacing/size constants if cards crowd (`MIN_GAP`, billboard scale, card `worldW` in src/world.js)
 
-- [ ] Custom domain for the beta URL (point a domain at the `lookar` Vercel project)
 
-- [ ] Permanent cloud log backend (replace webhook.site free tier)
 
-- [ ] **Custom content DB + specific-object recognition**: return OUR pre-uploaded info for a *specific* item (e.g. this exact car's owner story/cost), not just generic ID. Match via tag/QR on object, reference-image match, or attributes+GPS. (Product moat.)
 
-- [ ] **QR-code launch**: scan a QR → opens the web app (already URL-based); encode object/venue ID in the URL so a specific QR pre-loads that experience + auto-analyze.
 
-- [ ] **Ad serving**: sponsor badge / branded cards / interstitials, contextual targeting (car→auto brands), impression+tap tracking. Revenue model.
 
-- [ ] **Geolocated info + ads (later)**: GPS-level "you're at X → history + nearby offers" (soon); precise persistent outdoor anchoring via VPS (Lightship/Immersal/Google Geospatial) for location-anchored ads (bigger build).
 
 - [>] Persistent anchors across sessions / same real-world spot outdoors (VPS: Lightship / Immersal)
 
