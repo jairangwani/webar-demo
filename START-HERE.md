@@ -8,9 +8,9 @@ description: The generated map of webar-demo — what this repo is, where its co
 
 # START HERE — webar-demo
 
-**This repo does not say what it is.** Neither `spine/manifest.json` nor `README.md` carries a
-name or a summary, so none is shown — inventing one here would make this file a source instead
-of a map. Add it to whichever of those two files this repo keeps.
+**`webar-demo` does not say what it is.** Neither `spine/manifest.json` nor `README.md` in this
+repo carries a name or a summary, so none is shown — inventing one here would make this file a
+source instead of a map. Add it to whichever of those two files `webar-demo` keeps.
 
 ## Where the code lives
 
@@ -25,10 +25,10 @@ of a map. Add it to whichever of those two files this repo keeps.
 
 ## The documents
 
-5 documents, grouped by folder. 1 carry a `description:` in their own front-matter; **4 do not** and appear as a bare path. A further 1 under archive/vendor folders are left off this map.
+**webar-demo** has 5 documents, grouped by folder. 1 carry a `description:` in their own front-matter; **4 do not** and appear as a bare path. A further 1 under archive/vendor folders are left off this map.
 
-> A document with no `description:` cannot be routed to — you can only find it by already
-> knowing the filename. That is 4 of this repo's docs, and the fix is one line in each.
+> A document with no `description:` cannot be routed to — you can only find it by already knowing
+> the filename. That is 4 of webar-demo's docs, and the fix is one line in each.
 
 ### (repo root)
 
