@@ -15,7 +15,11 @@ Fast facts:
 - **Top gotchas:** A-Frame 1.2.0 (three r125) · `data-preload-chunks="slam"` required · bump `?v=N` after edits (iOS cache) · deploy the app to the **`lookar`** Vercel project (the old `webar-demo` project is auth-walled). Full list in README.
 - Two deploy targets: GitHub Pages (source, `git push origin/private`) + `lookar.vercel.app` (beta, `cd lookar && vercel deploy --prod --yes`).
 
-## 🦴 This project runs on The Spine <!-- spine-protocol:v2 -->
+## 🦴 This project runs on The Spine <!-- spine-protocol:v7 -->
+> 🗺️ **[`START-HERE.md`](START-HERE.md)** — the generated map of this repo: every document, what it is, and
+> where the code lives. Machine-written from each doc's own front matter, rebuilt by the commit hook, so it
+> cannot fall behind. Read it first.
+
 **webar-demo**'s truth lives in **`./spine/`** — tasks in `spine/tasks.md`, docs/blueprints in `spine/wiki/<category>/`.
 
 These invariants are stable (safe to rely on here): **one project = one spine** · `spine/tasks.md` is the ONE
