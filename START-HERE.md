@@ -41,10 +41,10 @@ it goes here.
 
 ## The documents
 
-**webar-demo** has 5 documents, grouped by folder. 1 carry a `description:` in their own front-matter; **4 do not** and appear as a bare path. A further 1 under archive/vendor folders are left off this map.
+**webar-demo** has 3 documents, grouped by folder. 0 carry a `description:` in their own front-matter; **3 do not** and appear as a bare path.
 
 > A document with no `description:` cannot be routed to — you can only find it by already knowing
-> the filename. That is 4 of webar-demo's docs, and the fix is one line in each.
+> the filename. That is 3 of webar-demo's docs, and the fix is one line in each.
 
 ### (repo root)
 
@@ -54,14 +54,6 @@ it goes here.
 ### backend
 
 - `backend/README.md`
-
-### spine
-
-- `spine/tasks.md`
-
-### spine/wiki/technology
-
-- **`spine/wiki/technology/kpix-lens-architecture.md`** — Production architecture for the KPIX LENS scan-and-identify AR app (CBS Bay Area lowrider parade) — modules, dedup strategy, cutout pipeline, scale plan
 
 ---
 
