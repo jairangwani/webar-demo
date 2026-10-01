@@ -41,6 +41,11 @@ it goes here.
 
 ## The documents
 
+> 📚 **This repo's knowledge is in the KNOWLEDGE STORE, not only in the files below.**
+> `knowledge_search({scope: "webar-demo"})` for what exists · `knowledge_get({id})` to read one ·
+> `knowledge_search({scope: "webar-demo", kind: "rule"})` for the rules that bind you — each hit carries its `forbids`.
+> Documents are leaving this folder repo by repo; the ones still here are still true.
+
 **webar-demo** has 3 documents, grouped by folder. 0 carry a `description:` in their own front-matter; **3 do not** and appear as a bare path.
 
 > A document with no `description:` cannot be routed to — you can only find it by already knowing
